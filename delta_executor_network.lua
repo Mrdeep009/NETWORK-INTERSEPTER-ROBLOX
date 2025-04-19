@@ -1,4 +1,4 @@
--- Delta Executor Network Module
+-- Delta Executor Network Module (Enhanced Version)
 local DeltaNetwork = {}
 
 -- Services
@@ -21,15 +21,17 @@ DeltaNetwork.Hooks = {
 
 -- Intercept network traffic
 function DeltaNetwork.StartInterception()
-    -- Hook into network events
-    -- Will implement actual interception logic in next update
+    print("Starting network interception...")
+    -- Example: Hooking into sent/received events
+    NetworkClient.ConnectionAccepted:Connect(function()
+        print("Connection accepted!")
+    end)
 end
 
 -- Log network data
 function DeltaNetwork.LogData(direction, data)
-    if DeltaNetwork.Config.Logging.Mode == "BOTH" or 
-       DeltaNetwork.Config.Logging.Mode == direction then
-        -- Process and log the data
+    if DeltaNetwork.Config.Logging.Mode == "BOTH" or DeltaNetwork.Config.Logging.Mode == direction then
+        print(direction .. " data: " .. tostring(data))
     end
 end
 
