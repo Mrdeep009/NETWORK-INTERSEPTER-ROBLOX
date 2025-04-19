@@ -1,14 +1,28 @@
--- Delta Executor Main Module
-local Delta = require(script.Parent.delta_executor_ui) -- Load UI module
+-- Delta Executor Main Module (Enhanced Version)
+local Delta = {
+    UI = require(script.Parent.delta_executor_ui),
+    Network = require(script.Parent.delta_executor_network),
+    Webhook = require(script.Parent.delta_executor_webhook)
+}
 
 -- Initialize the executor
 function Delta.Init()
-    Delta.UI.ShowLoadingScreen() -- Show loading screen
-    task.delay(3, function() -- Simulate loading
-        Delta.UI.LoadingScreen.Tween:Cancel()
-        Delta.UI.LoadingScreen.Frame:Destroy()
-        Delta.UI.ShowMainDashboard() -- Show main dashboard after loading
+    -- Show loading screen
+    print("Initializing Delta Executor...")
+    local loadingScreen = Delta.UI.ShowLoadingScreen()
+
+    task.delay(3, function()
+        -- Remove loading screen
+        print("Loading complete. Showing main dashboard...")
+        loadingScreen.Tween:Cancel()
+        loadingScreen.Frame:Destroy()
+
+        -- Show main dashboard
+        Delta.UI.ShowMainDashboard()
     end)
+
+    -- Start network interception
+    Delta.Network.StartInterception()
 end
 
 return Delta
