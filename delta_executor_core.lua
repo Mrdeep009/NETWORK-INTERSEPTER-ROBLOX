@@ -1,74 +1,59 @@
--- Delta Executor Core (Basic Version)
-local Delta = {
-    _VERSION = "2.1",
-    _AUTHOR = "Delta Team",
-    _LICENSE = "PRIVATE"
+-- Delta Executor Webhook Module (Enhanced Version)
+local DeltaWebhook = {}
+
+-- Services
+local HttpService = game:GetService("HttpService")
+
+-- Configuration
+DeltaWebhook.Config = {
+    WebhookURL = "",
+    RateLimit = 5, -- seconds between requests
+    LastRequest = 0
 }
 
--- Main GUI Container
-Delta.UI = {
-    MainGui = Instance.new("ScreenGui"),
-    CurrentTheme = {
-        Background = Color3.fromRGB(20, 20, 30),
-        Primary = Color3.fromRGB(0, 170, 255),
-        Text = Color3.fromRGB(255, 255, 255)
-    }
-}
-
-Delta.UI.MainGui.Name = "DeltaExecutor"
-Delta.UI.MainGui.ResetOnSpawn = false
-Delta.UI.MainGui.Parent = game:GetService("CoreGui")
-
--- Loading Screen Implementation
-function Delta.UI.CreateLoadingScreen()
-    local loadingFrame = Instance.new("Frame")
-    loadingFrame.Size = UDim2.new(1, 0, 1, 0)
-    loadingFrame.BackgroundColor3 = Delta.UI.CurrentTheme.Background
-    loadingFrame.Parent = Delta.UI.MainGui
-
-    local loadingLabel = Instance.new("TextLabel")
-    loadingLabel.Text = "DELTA EXECUTOR INITIALIZING..."
-    loadingLabel.TextColor3 = Delta.UI.CurrentTheme.Text
-    loadingLabel.Size = UDim2.new(1, 0, 0.1, 0)
-    loadingLabel.Position = UDim2.new(0, 0, 0.45, 0)
-    loadingLabel.Parent = loadingFrame
-
-    -- Simple loading animation
-    local tweenService = game:GetService("TweenService")
-    local tween = tweenService:Create(
-        loadingLabel,
-        TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
-        {TextTransparency = 0.5}
-    )
-    tween:Play()
-
-    return {
-        Frame = loadingFrame,
-        Label = loadingLabel,
-        Tween = tween
-    }
+-- Validate webhook URL
+function DeltaWebhook.ValidateURL(url)
+    return type(url) == "string" and #url > 0 and string.find(url, "discord.com/api/webhooks")
 end
 
--- Webhook Configuration
-function Delta.SetupWebhook(url)
-    -- Basic validation
-    if type(url) ~= "string" or #url < 10 then
+-- Send data to webhook
+function DeltaWebhook.Send(data)
+    if not DeltaWebhook.ValidateURL(DeltaWebhook.Config.WebhookURL) then
+        warn("Invalid webhook URL!")
         return false, "Invalid webhook URL"
     end
-    
-    Delta.Config = Delta.Config or {}
-    Delta.Config.Webhook = url
-    return true
+
+    -- Rate limiting check
+    local now = os.time()
+    if now - DeltaWebhook.Config.LastRequest < DeltaWebhook.Config.RateLimit then
+        warn("Rate limited!")
+        return false, "Rate limited"
+    end
+
+    -- Prepare payload
+    local payload = {
+        content = data,
+        username = "Delta Executor",
+        avatar_url = "https://i.imgur.com/xxxxxxx.png"
+    }
+
+    -- Send request
+    local success, response = pcall(function()
+        return HttpService:PostAsync(
+            DeltaWebhook.Config.WebhookURL,
+            HttpService:JSONEncode(payload),
+            Enum.HttpContentType.ApplicationJson
+        )
+    end)
+
+    if success then
+        DeltaWebhook.Config.LastRequest = now
+        print("Webhook data sent successfully!")
+        return true
+    else
+        warn("Failed to send webhook data: " .. tostring(response))
+        return false, response
+    end
 end
 
--- Initialize
-local loadingScreen = Delta.UI.CreateLoadingScreen()
-
--- Simulate loading process
-task.delay(3, function()
-    loadingScreen.Tween:Cancel()
-    loadingScreen.Frame:Destroy()
-    -- Main interface will be loaded here in next update
-end)
-
-return Delta
+return DeltaWebhook
