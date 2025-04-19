@@ -1,8 +1,7 @@
--- Client-side Delta Executor Loader
--- Executes all modules from GitHub in sequence with enhanced debugging
+-- Client-side Delta Executor Loader (Enhanced Version)
+-- Executes all modules from GitHub in sequence with better integration and error handling
 
-local HttpService = game:GetService("HttpService")
-
+-- List of modules to load
 local MODULES = {
     "https://raw.githubusercontent.com/Mrdeep009/NETWORK-INTERSEPTER-ROBLOX/main/delta_executor_core.lua",
     "https://raw.githubusercontent.com/Mrdeep009/NETWORK-INTERSEPTER-ROBLOX/main/delta_executor_network.lua",
@@ -21,31 +20,32 @@ local function loadModule(url)
 
     if not success then
         warn("Failed to load module: " .. url .. "\nError: " .. tostring(result))
-        return false
+        return false, nil
     else
         print("Successfully loaded module: " .. url)
     end
-    return true
+    return true, result
 end
 
--- Execute all modules in order
+-- Table to hold loaded modules
+local LoadedModules = {}
+
+-- Load and execute all modules in order
 for _, moduleUrl in ipairs(MODULES) do
-    if not loadModule(moduleUrl) then
+    local success, module = loadModule(moduleUrl)
+    if not success then
         error("Critical module failed to load: " .. moduleUrl)
+    else
+        table.insert(LoadedModules, module)
     end
 end
 
--- Initialize after all modules loaded
-local success, result = pcall(function()
-    local Delta = require(script.Parent.delta_executor_main)
-    Delta.Initialize()
-    print("Delta Executor Client v1.0 loaded successfully")
-    print("All modules executed in correct order")
-    return Delta
-end)
-
-if not success then
-    warn("Critical error during initialization: " .. tostring(result))
+-- Initialize the executor using the main module
+local mainModule = LoadedModules[#LoadedModules]
+if mainModule and type(mainModule.Init) == "function" then
+    print("Initializing Delta Executor...")
+    mainModule.Init()
+    print("Delta Executor initialized successfully!")
 else
-    print("Initialization completed successfully.")
+    error("Main module is missing Init function!")
 end
