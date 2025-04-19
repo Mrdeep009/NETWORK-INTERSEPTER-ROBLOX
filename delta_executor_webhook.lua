@@ -1,4 +1,4 @@
--- Delta Executor Webhook Module
+-- Delta Executor Webhook Module (Enhanced Version)
 local DeltaWebhook = {}
 
 -- Services
@@ -19,12 +19,14 @@ end
 -- Send data to webhook
 function DeltaWebhook.Send(data)
     if not DeltaWebhook.ValidateURL(DeltaWebhook.Config.WebhookURL) then
+        warn("Invalid webhook URL!")
         return false, "Invalid webhook URL"
     end
 
     -- Rate limiting check
     local now = os.time()
     if now - DeltaWebhook.Config.LastRequest < DeltaWebhook.Config.RateLimit then
+        warn("Rate limited!")
         return false, "Rate limited"
     end
 
@@ -46,8 +48,10 @@ function DeltaWebhook.Send(data)
 
     if success then
         DeltaWebhook.Config.LastRequest = now
+        print("Webhook data sent successfully!")
         return true
     else
+        warn("Failed to send webhook data: " .. tostring(response))
         return false, response
     end
 end
